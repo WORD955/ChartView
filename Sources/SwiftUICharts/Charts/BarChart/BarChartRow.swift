@@ -42,18 +42,19 @@ public struct BarChartRow: View {
             }
             .padding([.top, .leading, .trailing], 10)
             .gesture(DragGesture()
-                .onChanged({ value in
-                    let width = geometry.frame(in: .local).width
-                    self.touchLocation = value.location.x/width
-                    if let currentValue = self.getCurrentValue(width: width) {
-                        self.chartValue.currentValue = currentValue
-                        self.chartValue.interactionInProgress = true
-                    }
-                })
-                .onEnded({ value in
-                    self.chartValue.interactionInProgress = false
-                    self.touchLocation = -1
-                })
+                        .onChanged{ value in
+                let width = geometry.frame(in: .local).width
+                self.touchLocation = value.location.x/width
+                if let currentValue = self.getCurrentValue(width: width) {
+                    self.chartValue.currentValue = currentValue.value
+                    self.chartValue.currentIndex = currentValue.index
+                    self.chartValue.interactionInProgress = true
+                }
+            }.onEnded { value in
+                self.chartValue.currentIndex = nil
+                self.chartValue.interactionInProgress = false
+                self.touchLocation = -1
+            }
             )
         }
     }
@@ -81,9 +82,9 @@ public struct BarChartRow: View {
 	/// Get data value where touch happened
 	/// - Parameter width: width of chart
 	/// - Returns: value as `Double` if chart has data
-    func getCurrentValue(width: CGFloat) -> Double? {
+    func getCurrentValue(width: CGFloat) -> (index: Int, value: Double)? {
         guard self.chartData.data.count > 0 else { return nil}
-            let index = max(0,min(self.chartData.data.count-1,Int(floor((self.touchLocation*width)/(width/CGFloat(self.chartData.data.count))))))
-            return self.chartData.points[index]
-        }
+        let index = max(0,min(self.chartData.data.count-1,Int(floor((self.touchLocation*width)/(width/CGFloat(self.chartData.data.count))))))
+        return (index, self.chartData.points[index])
+    }
 }
